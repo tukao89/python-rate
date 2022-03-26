@@ -20,16 +20,64 @@ def create_app():
         email = db.Column(db.String(1000))
         phone = db.Column(db.String(1000))
     
-    def __init__(self, name, username, age, jobTitle, email, phone):
-        self.name = name
-        self.username = username
-        self.age = age
-        self.jobTitle = jobTitle
-        self.email = email
-        self.phone = phone
+        def __init__(self, name, username, age, jobTitle, email, phone):
+            self.name = name
+            self.username = username
+            self.age = age
+            self.jobTitle = jobTitle
+            self.email = email
+            self.phone = phone
+        
+    class questions(db.Model):
+        id = db.Column('id', db.Integer)
+        question = db.Column(db.String(1000))        
+        type = db.Column(db.String(20))        
+    
+        def __init__(self, id, question, type):
+            self.id = id
+            self.question = question
+            self.type = type
+    
+    class answers(db.Model):
+        id = db.Column('id', db.Integer, primary_key = True)
+        questionId = db.Column(db.Interger)        
+        answer = db.Column(db.String(1000))
+    
+        def __init__(self, question, type):
+            self.question = question
+            self.type = type
+    
+    class userAnswers(db.Model):
+        id = db.Column('id', db.Integer, primary_key = True)
+        userId = db.Column(db.Interger)        
+        questionId = db.Column(db.Interger)        
+        answerId = db.Column(db.Interger)
+    
+        def __init__(self,userId, questionId, answerId):
+            self.userId = userId
+            self.questionId = questionId
+            self.answerId = answerId
    
     db.create_all()
-
+    
+    if questions.query(questions.id).one() is None:
+        db.session.add(questions(1, "Theo bạn thiết kế của sản phẩm năm nay thế nào?",'radio'))
+        db.session.add(answers(1, "Tuyệt đẹp"))
+        db.session.add(answers(1, "Bình thường"))
+        db.session.add(answers(1, "Xấu"))            
+        
+        db.session.add(questions(2, "Theo bạn cần thêm tính năng nào?",'checkbox'))
+        db.session.add(answers(2, "Đề nổ từ xa"))
+        db.session.add(answers(2, "Phanh tay điện tử"))
+        db.session.add(answers(2, "Auto hold"))
+        db.session.add(answers(2, "Gạt mưa tự động"))
+        
+        db.session.add(questions(3, "Bạn thấy giá bán hợp lý không?",'radio'))
+        db.session.add(answers(3, "Đắt"))
+        db.session.add(answers(3, "Hợp lý"))
+        db.session.add(answers(3, "Rẻ"))
+        
+        db.session.commit()
     
     app.config['MAIL_SERVER']='mx.vitan.dev'
     app.config['MAIL_PORT'] = 587
@@ -40,16 +88,19 @@ def create_app():
     mail = Mail(app)
 
     
-    @app.route("/")
+    @app.route("/test-mail")
     def testMail():
         msg = Message('Hello', sender = 'no-reply@mail.vitan.dev', recipients = ['tu.phunganh@gmail.com'])
         msg.body = "Hello Flask message sent from Flask-Mail"
         mail.send(msg)
         return "Sent"
     
-    @app.route("/test-mail")
+    @app.route("/")
     def index():
-        return render_template("index.html")
+        listQuestions = questions.all()
+        listAnswers = answers.all()
+        
+        return render_template("index.html", questions=questions, answers=answers)
     
     @app.route("/auth/login", methods=["GET","POST"])
     def login():
