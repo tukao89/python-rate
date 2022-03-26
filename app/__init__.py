@@ -11,7 +11,7 @@ import base64
 from io import BytesIO
 import pandas as pd
 
-plt.style.use("cyberpunk")
+#plt.style.use("cyberpunk")
 
 
 def create_app():
@@ -90,7 +90,7 @@ def create_app():
         db.session.commit()
     
     app.config['MAIL_SERVER']='mx.vitan.dev'
-    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_PORT'] = 465
     app.config['MAIL_USERNAME'] = 'no-reply@mail.vitan.dev'
     app.config['MAIL_PASSWORD'] = '17252101'
     app.config['MAIL_USE_TLS'] = False
@@ -103,16 +103,6 @@ def create_app():
         jobTitle = StringField('Job Title', [validators.DataRequired(message="Job Title is required.")])
         email = StringField("Email",  [validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
         phone = StringField('Phone')
-        password = PasswordField('New Password', [validators.DataRequired(), validators.EqualTo('confirm', message='Passwords must match')])
-        confirm = PasswordField('Repeat Password')
-    
-    
-    @app.route("/test-mail")
-    def testMail():
-        msg = Message('Hello', sender = 'no-reply@mail.vitan.dev', recipients = ['tu.phunganh@gmail.com'])
-        msg.body = "Hello Flask message sent from Flask-Mail"
-        mail.send(msg)
-        return "Sent"
     
     @app.route("/", methods=["GET","POST"])
     def index():
@@ -134,6 +124,9 @@ def create_app():
                         for val in request.form.getlist("q"+str(q.id)):
                             db.session.add(userAnswers(user.id, q.id,val))
                 db.session.commit()
+                msg = Message('Cảm ơn bạn đã tham gia khảo sát!', sender = 'no-reply@mail.vitan.dev', recipients = [email])
+                msg.body = "Cảm ơn bạn đã tham gia khảo sát!"
+                mail.send(msg)
                 return redirect(url_for('thankyou', id=user.id))
         else:
             flash('Lỗi tung toét, nhập lại đi!', 'error')
