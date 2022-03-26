@@ -4,10 +4,28 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 col-xl-7">
             <section class="section hero text-center">
-                <img src="/static/g1.jpeg" height="300" />
+                <!-- <img src="/static/g1.jpeg" height="300" />
                 <h2 class="display-2">Tạo, Lưu trữ và Chia sẻ mã của bạn</h2>
-                <a class="btn btn-primary" href="/auth/register">Bắt đầu</a>
+                <a class="btn btn-primary" href="/auth/register">Bắt đầu</a> -->
+              {% from "_formhelpers.html" import render_field %}
+              <form method=post>
+                <dl>
+                  {{ render_field(form.name) }}
+                  {{ render_field(form.age) }}
+                  {{ render_field(form.email) }}
+                  {{ render_field(form.jobTitle) }}
+                  {{ render_field(form.phone) }}
+                </dl>
+                <p><input type=submit value=Register>
+              </form>
+
             </section>
         </div>
     </div>
 {% endblock %}
+
+<!-- name = db.Column(db.String(1000))        
+        age = db.Column(db.Integer)
+        jobTitle = db.Column(db.String(1000))
+        email = db.Column(db.String(1000))
+        phone = db.Column(db.String(1000)) -->

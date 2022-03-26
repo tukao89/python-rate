@@ -2,6 +2,7 @@ from flask import Flask, render_template, make_response,request, flash,url_for,r
 from flask_sqlalchemy import SQLAlchemy
 import hashlib
 from flask_mail import Mail, Message
+from wtforms import Form, BooleanField, StringField, PasswordField, validators
 
 def create_app():
     
@@ -20,9 +21,8 @@ def create_app():
         email = db.Column(db.String(1000))
         phone = db.Column(db.String(1000))
     
-    def __init__(self, name, username, age, jobTitle, email, phone):
+    def __init__(self, name, age, jobTitle, email, phone):
         self.name = name
-        self.username = username
         self.age = age
         self.jobTitle = jobTitle
         self.email = email
@@ -39,17 +39,35 @@ def create_app():
     app.config['MAIL_USE_SSL'] = True
     mail = Mail(app)
 
+    class RegistrationForm(Form):
+        name = StringField('Name', [validators.DataRequired()])
+        age = StringField('Age', [validators.DataRequired()])
+        jobTitle = StringField('Job Title', [validators.DataRequired()])
+        email = StringField('Email Address', [validators.Length(min=6, max=35)])
+        phone = PasswordField('Phone')
     
-    @app.route("/")
+    @app.route("/test-mail")
     def testMail():
         msg = Message('Hello', sender = 'no-reply@mail.vitan.dev', recipients = ['tu.phunganh@gmail.com'])
         msg.body = "Hello Flask message sent from Flask-Mail"
         mail.send(msg)
         return "Sent"
     
-    @app.route("/test-mail")
+    @app.route("/")
     def index():
-        return render_template("index.html")
+        form = RegistrationForm(request.form)
+        if(request.method=="POST") and form.validate():
+            name = request.form.get("name")
+            username = request.form.get("username")
+            password = request.form.get("password")
+            if username!='' and password!='' and name !='':
+                password = hashlib.md5(password.encode('utf-8')).hexdigest()
+                db.session.add(users(name,username,password))
+                db.session.commit()
+                flash('Tạo tài khoản thành công!', 'success')
+            else:
+                flash('Lỗi tung toét, nhập lại đi!', 'error')
+        return render_template("index.html", form = form)
     
     @app.route("/auth/login", methods=["GET","POST"])
     def login():
@@ -71,7 +89,8 @@ def create_app():
         
     @app.route("/auth/register", methods=["GET","POST"])
     def register():
-        if(request.method=="POST"):
+        form = RegistrationForm(request.form)
+        if(request.method=="POST") and form.validate():
             name = request.form.get("name")
             username = request.form.get("username")
             password = request.form.get("password")
