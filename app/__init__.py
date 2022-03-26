@@ -1,39 +1,53 @@
 from flask import Flask, render_template, make_response,request, flash,url_for,redirect
 from flask_sqlalchemy import SQLAlchemy
 import hashlib
+from flask_mail import Mail, Message
 
 def create_app():
     
     app = Flask(__name__)
-    app.secret_key = 'super secret key'
+    app.secret_key = '1234567890'
     app.config['SESSION_TYPE'] = 'filesystem'
-    app.config ['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{app.instance_path}/snippets.sqlite3'
+    app.config ['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{app.instance_path}/rate.sqlite3'
 
     db = SQLAlchemy(app)
     
     class users(db.Model):
         id = db.Column('id', db.Integer, primary_key = True)
-        name = db.Column(db.String(1000))
-        username = db.Column(db.String(1000))
-        password = db.Column(db.String(1000))
-        
-        def __init__(self, name, username, password):
-            self.name = name
-            self.username = username
-            self.password = password
-        
-    class snippets(db.Model):
-        id = db.Column('id', db.Integer, primary_key = True)
-        title = db.Column(db.String(1000))
-        content = db.Column(db.String(100000))
-
-        def __init__(self, title, content):
-            self.title = title
-            self.content = content
+        name = db.Column(db.String(1000))        
+        age = db.Column(db.Integer)
+        jobTitle = db.Column(db.String(1000))
+        email = db.Column(db.String(1000))
+        phone = db.Column(db.String(1000))
+    
+    def __init__(self, name, username, age, jobTitle, email, phone):
+        self.name = name
+        self.username = username
+        self.age = age
+        self.jobTitle = jobTitle
+        self.email = email
+        self.phone = phone
    
     db.create_all()
 
+    
+    app.config['MAIL_SERVER']='mx.vitan.dev'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USERNAME'] = 'no-reply@mail.vitan.dev'
+    app.config['MAIL_PASSWORD'] = '17252101'
+    app.config['MAIL_USE_TLS'] = False
+    app.config['MAIL_USE_SSL'] = True
+    mail = Mail(app)
+
+    
     @app.route("/")
+    def testMail():
+        msg = Message('Hello', sender = 'no-reply@mail.vitan.dev', recipients = ['tu.phunganh@gmail.com'])
+        msg.body = "Hello Flask message sent from Flask-Mail"
+        mail.send(msg)
+        return "Sent"
+    
+    @app.route("/test-mail")
     def index():
         return render_template("index.html")
     

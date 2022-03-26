@@ -6,18 +6,15 @@ class users(db.Model):
     id = db.Column('id', db.Integer, primary_key = True)
     name = db.Column(db.String(1000))
     username = db.Column(db.String(1000))
-    password = db.Column(db.String(1000))
+    age = db.Column(db.Integer)
+    jobTitle = db.Column(db.String(1000))
+    email = db.Column(db.String(1000))
+    phone = db.Column(db.String(1000))
     
-    def __init__(self, name, username, password):
+    def __init__(self, name, username, age, jobTitle, email, phone):
         self.name = name
         self.username = username
-        self.password = password
-    
-class snippets(db.Model):
-    id = db.Column('id', db.Integer, primary_key = True)
-    title = db.Column(db.String(1000))
-    content = db.Column(db.String(100000))
-
-    def __init__(self, title, content):
-        self.title = title
-        self.content = content
+        self.age = age
+        self.jobTitle = jobTitle
+        self.email = email
+        self.phone = phone
