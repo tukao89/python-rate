@@ -1,8 +1,9 @@
+from email import message
 from flask import Flask, render_template, make_response,request, flash,url_for,redirect
 from flask_sqlalchemy import SQLAlchemy
 import hashlib
 from flask_mail import Mail, Message
-from wtforms import Form, BooleanField, StringField, PasswordField, validators
+from wtforms import Form, IntegerField, BooleanField, StringField,EmailField, PasswordField, validators
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
@@ -99,19 +100,22 @@ def create_app():
 
     class RegistrationForm(Form):
         name = StringField(label='Name', validators=[validators.DataRequired(message="Name is required.")])
-        age = StringField(label='Age', validators=[validators.DataRequired(message="Age is required.")])
+        age = IntegerField(label='Age', validators=[validators.DataRequired(message="Age is required.")])
         jobTitle = StringField(label='Job Title', validators=[validators.DataRequired(message="Job Title is required.")])
-        # email = StringField(label="Email",  validators=[validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
-        # phone = StringField(label='Phone',validators=[validators.DataRequired(message="Phone is required.")])
-        email = StringField('Email', validators=[validators.DataRequired(), validators.Email(), validators.Length(min=6, max=40)])
-        phone = StringField('Phone', validators=[validators.DataRequired(), validators.Length(10)])
+        email = EmailField(
+            label='Email', 
+            validators=[
+                validators.DataRequired(message="Email is required.")
+                ]
+            )
+        phone = StringField(label='Phone', validators=[validators.DataRequired( message="Phone is required."), validators.Length(10, message="Phone must be 10-nunmber length.")])
     
     @app.route("/", methods=["GET","POST"])
     def index():
         listQuestions = questions.query.all()
         listAnswers = answers.query.all()        
         form = RegistrationForm(request.form)
-        if(request.method=="POST") and form.validators():
+        if(request.method=="POST"):
             name = request.form.get("name")
             age = request.form.get("age")
             jobTitle = request.form.get("jobTitle")
