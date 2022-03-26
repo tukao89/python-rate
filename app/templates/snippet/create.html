@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block title %}Tạo mới{% endblock %}
+{% block main %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <form method="POST" class="form" novalidate>
+            <div class="mb-3 form-header">
+                <p class="display-6 text-center">
+                    Tạo snippet
+                </p>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="title">Tiêu đề</label>
+                <div class="form-text"></div>
+                <input class="form-control"
+                       id="title"
+                       name="title"
+                       required
+                       type="text"
+                       value="">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="content">Nội dung</label>
+                <div class="form-text">Sử dụng cú pháp Markdown để soạn thảo</div>
+                <textarea class="form-control" id="content" name="content" required>
+</textarea>
+            </div>
+            <div class="mb-3 text-center">
+                <button class="btn btn-primary d-block w-100">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{%block footer%}
+<script>var simplemde = new SimpleMDE({
+    element: document.getElementById("content"),
+    initialValue: document.getElementById("content").value,
+    forceSync: true,
+    renderingConfig: {
+        codeSyntaxHighlighting: true,
+    },
+});</script> {%endblock%}
