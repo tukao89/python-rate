@@ -10,6 +10,10 @@ waitress = "*"
 numpy = "*"
 flask-mail = "*"
 flask-wtf = "*"
+email-validator = "*"
+matplotlib = "*"
+mplcyberpunk = "*"
+pandas = "*"
 
 [dev-packages]
 

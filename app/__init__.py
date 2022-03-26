@@ -3,6 +3,17 @@ from flask_sqlalchemy import SQLAlchemy
 import hashlib
 from flask_mail import Mail, Message
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
+import numpy as np
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+import mplcyberpunk
+import base64
+from io import BytesIO
+import pandas as pd
+
+plt.style.use("cyberpunk")
+fig, ((ax3)) = plt.subplots(
+    1, 1, constrained_layout=True, figsize=(7, 7), dpi=100)
 
 def create_app():
     
@@ -21,16 +32,15 @@ def create_app():
         email = db.Column(db.String(1000))
         phone = db.Column(db.String(1000))
     
-        def __init__(self, name, username, age, jobTitle, email, phone):
+        def __init__(self, name, age, jobTitle, email, phone):
             self.name = name
-            self.username = username
             self.age = age
             self.jobTitle = jobTitle
             self.email = email
             self.phone = phone
         
     class questions(db.Model):
-        id = db.Column('id', db.Integer)
+        id = db.Column('id', db.Integer, primary_key = True)
         question = db.Column(db.String(1000))        
         type = db.Column(db.String(20))        
     
@@ -41,19 +51,19 @@ def create_app():
     
     class answers(db.Model):
         id = db.Column('id', db.Integer, primary_key = True)
-        questionId = db.Column(db.Interger)        
+        questionId = db.Column(db.Integer)        
         answer = db.Column(db.String(1000))
     
-        def __init__(self, question, type):
-            self.question = question
-            self.type = type
+        def __init__(self, questionId, answer):
+            self.questionId = questionId
+            self.answer = answer
     
     class userAnswers(db.Model):
         id = db.Column('id', db.Integer, primary_key = True)
-        userId = db.Column(db.Interger)        
-        questionId = db.Column(db.Interger)        
-        answerId = db.Column(db.Interger)
-    
+        userId = db.Column(db.Integer)        
+        questionId = db.Column(db.Integer)        
+        answerId = db.Column(db.Integer)
+     
         def __init__(self,userId, questionId, answerId):
             self.userId = userId
             self.questionId = questionId
@@ -61,17 +71,17 @@ def create_app():
    
     db.create_all()
     
-    if questions.query(questions.id).one() is None:
+    if questions.query.first() is None:
         db.session.add(questions(1, "Theo bạn thiết kế của sản phẩm năm nay thế nào?",'radio'))
         db.session.add(answers(1, "Tuyệt đẹp"))
         db.session.add(answers(1, "Bình thường"))
         db.session.add(answers(1, "Xấu"))            
         
         db.session.add(questions(2, "Theo bạn cần thêm tính năng nào?",'checkbox'))
-        db.session.add(answers(2, "Đề nổ từ xa"))
-        db.session.add(answers(2, "Phanh tay điện tử"))
-        db.session.add(answers(2, "Auto hold"))
-        db.session.add(answers(2, "Gạt mưa tự động"))
+        db.session.add(answers(2, "Camera xuyên thấu"))
+        db.session.add(answers(2, "Sạc siêu nhanh 1000w"))
+        db.session.add(answers(2, "Pin dung lượng x5")) 
+        db.session.add(answers(2, "Ram 50GB"))
         
         db.session.add(questions(3, "Bạn thấy giá bán hợp lý không?",'radio'))
         db.session.add(answers(3, "Đắt"))
@@ -89,11 +99,14 @@ def create_app():
     mail = Mail(app)
 
     class RegistrationForm(Form):
-        name = StringField('Name', [validators.DataRequired()])
-        age = StringField('Age', [validators.DataRequired()])
-        jobTitle = StringField('Job Title', [validators.DataRequired()])
-        email = StringField('Email Address', [validators.Length(min=6, max=35)])
-        phone = PasswordField('Phone')
+        name = StringField('Name', [validators.DataRequired(message="Name is required.")])
+        age = StringField('Age', [validators.DataRequired(message="Age is required.")])
+        jobTitle = StringField('Job Title', [validators.DataRequired(message="Job Title is required.")])
+        email = StringField("Email",  [validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
+        phone = StringField('Phone')
+        password = PasswordField('New Password', [validators.DataRequired(), validators.EqualTo('confirm', message='Passwords must match')])
+        confirm = PasswordField('Repeat Password')
+    
     
     @app.route("/test-mail")
     def testMail():
@@ -102,75 +115,52 @@ def create_app():
         mail.send(msg)
         return "Sent"
     
-    @app.route("/")
+    @app.route("/", methods=["GET","POST"])
     def index():
-        listQuestions = questions.all()
-        listAnswers = answers.all()        
+        listQuestions = questions.query.all()
+        listAnswers = answers.query.all()        
         form = RegistrationForm(request.form)
-        if(request.method=="POST") and form.validate():
+        if(request.method=="POST") :
             name = request.form.get("name")
-            username = request.form.get("username")
-            password = request.form.get("password")
-            if username!='' and password!='' and name !='':
-                password = hashlib.md5(password.encode('utf-8')).hexdigest()
-                db.session.add(users(name,username,password))
+            age = request.form.get("age")
+            jobTitle = request.form.get("jobTitle")
+            email = request.form.get("email")
+            phone = request.form.get("phone")
+            user = users(name,age,jobTitle,email,phone)
+            db.session.add(user)            
+            db.session.commit()            
+            if user.id>0:
+                for q in listQuestions:
+                    if request.form.get("q"+str(q.id)):
+                        for val in request.form.getlist("q"+str(q.id)):
+                            db.session.add(userAnswers(user.id, q.id,request.form.get("q"+str(q.id))))
                 db.session.commit()
-                flash('Tạo tài khoản thành công!', 'success')
-            else:
-                flash('Lỗi tung toét, nhập lại đi!', 'error')
-        return render_template("index.html", form = form, questions=questions, answers=answers)
+                return redirect(url_for('thankyou', id=user.id))
+        else:
+            flash('Lỗi tung toét, nhập lại đi!', 'error')
+        return render_template("index.html", form = form, questions=listQuestions, answers=listAnswers)
     
-    @app.route("/auth/login", methods=["GET","POST"])
-    def login():
-        loggedInId = request.cookies.get('loggedIn')
-        if loggedInId and int(loggedInId)>0:
-            return redirect(url_for('snippet_list'))
-        if(request.method=="POST"):
-            username = request.form.get("username")
-            password = request.form.get("password")
-            password = hashlib.md5(password.encode('utf-8')).hexdigest()
-            try:
-                user =  users.query.filter_by(username=username, password=password).one()
-                resp = make_response(redirect(url_for('snippet_list')))
-                resp.set_cookie('loggedIn', str(user.id))
-                return resp
-            except:
-                flash('Tên đăng nhập hoặc mật khẩu không chính xác!', 'error')
-        return render_template("auth/login.html")
-        
-    @app.route("/auth/register", methods=["GET","POST"])
-    def register():
-        form = RegistrationForm(request.form)
-        if(request.method=="POST") and form.validate():
-            name = request.form.get("name")
-            username = request.form.get("username")
-            password = request.form.get("password")
-            if username!='' and password!='' and name !='':
-                password = hashlib.md5(password.encode('utf-8')).hexdigest()
-                db.session.add(users(name,username,password))
-                db.session.commit()
-                flash('Tạo tài khoản thành công!', 'success')
-            else:
-                flash('Lỗi tung toét, nhập lại đi!', 'error')
-        return render_template("auth/register.html")
-    
-    @app.route("/s")
-    def snippet_list():
-        snippets = []
-        for i in range(100):
-            snippets.append({
-                "id":i,
-                "title":"snippet - " + str(i+1)
-            })
-        return render_template("snippet/list.html",snippets=snippets)
-    
-    @app.route("/s/<int:id>")
-    def snippet_detail(id):
-        return render_template("snippet/detail.html",id=id)
-    
-    @app.route("/create")
-    def snippet_create():
-        return render_template("snippet/create.html")
-    
+    @app.route("/thankyou/<int:id>")
+    def thankyou(id):
+        data3 = {
+            "Tuyệt đẹp": 2,
+            "Đẹp": 3,
+            "Bình thường": 2,
+            "Xấu": 1,
+            "Xấu tệ": 2,
+        }
+
+        ax3.set_title("Bạn đánh giá thế nào về thiết kế của Galaxy S22?", fontsize=11)
+
+        #
+        labels = data3.keys()
+        values = data3.values()
+        explode = (0.01, 0.01, 0.01, 0.01, 0.01)
+
+        ax3.pie(values, labels=labels, autopct="%.2f%%", explode=explode)
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+        return render_template("thankyou.html",id=id, chart="<img src='data:image/png;base64,"+data+"'/>")
 
     return app

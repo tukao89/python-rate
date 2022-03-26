@@ -1,27 +1,48 @@
 {% extends "layout.html" %}
 {% block title %}Trang chủ{% endblock %}
 {% block main %}
-    <div class="row justify-content-center">
+<form method=post>
+    <div class="row justify-content-center">      
         <div class="col-12 col-lg-8 col-xl-7">
-            <section class="section hero text-center">
-                <!-- <img src="/static/g1.jpeg" height="300" />
-                <h2 class="display-2">Tạo, Lưu trữ và Chia sẻ mã của bạn</h2>
-                <a class="btn btn-primary" href="/auth/register">Bắt đầu</a> -->
-              {% from "_formhelpers.html" import render_field %}
-              <form method=post>
-                <dl>
-                  {{ render_field(form.name) }}
-                  {{ render_field(form.age) }}
-                  {{ render_field(form.email) }}
-                  {{ render_field(form.jobTitle) }}
-                  {{ render_field(form.phone) }}
-                </dl>
-                <p><input type=submit value=Register>
-              </form>
-
-            </section>
-        </div>
+          <div class="card">            
+            <div class="card-body">
+              <h5 class="card-title">Thông tin cá nhân</h5>
+              <p class="card-text">Nhập đúng thông tin để nhận giải thưởng nhé!</p>
+              
+              
+                {% from "_formhelpers.html" import render_field %}               
+                    {{ render_field(form.name, class="form-control") }}
+                    {{ render_field(form.age, class="form-control") }}
+                    {{ render_field(form.email, class="form-control") }}
+                    {{ render_field(form.jobTitle, class="form-control") }}
+                    {{ render_field(form.phone, class="form-control") }}                
+            </div>
+          </div>          
+          <div class="card" style="margin-top:30px">            
+            <div class="card-body">
+              <h5 class="card-title">Khảo sát</h5>
+              
+            {%for q in questions%}
+              <h4>{{q.question}}</h4>
+                {%for a in answers%}
+                  {%if q.id==a.questionId%}
+                  <div class="form-group form-check">
+                      {%if q.type=='radio'%}
+                        <input type="radio" value="{{a.id}}" class="form-check-input" name="q{{q.id}}" id="a{{a.id}}"/>
+                      {%else%}
+                        <input type="checkbox" value="{{a.id}}" class="form-check-input" name="q{{q.id}}" id="a{{a.id}}"/>
+                      {%endif%}
+                      <label class="form-check-label" for="a{{a.id}}">{{a.answer}}</label>
+                  </div>
+                  {%endif%}
+                {%endfor%}    
+              {%endfor%}                                
+                </div>
+                <input type=submit value="Gửi khảo sát" class="btn btn-primary mt-20">
+          </div>
+        </div>      
     </div>
+  </form>
 {% endblock %}
 
 <!-- name = db.Column(db.String(1000))        
