@@ -12,8 +12,7 @@ from io import BytesIO
 import pandas as pd
 
 plt.style.use("cyberpunk")
-fig, ((ax3)) = plt.subplots(
-    1, 1, constrained_layout=True, figsize=(7, 7), dpi=100)
+
 
 def create_app():
     
@@ -133,7 +132,7 @@ def create_app():
                 for q in listQuestions:
                     if request.form.get("q"+str(q.id)):
                         for val in request.form.getlist("q"+str(q.id)):
-                            db.session.add(userAnswers(user.id, q.id,request.form.get("q"+str(q.id))))
+                            db.session.add(userAnswers(user.id, q.id,val))
                 db.session.commit()
                 return redirect(url_for('thankyou', id=user.id))
         else:
@@ -141,26 +140,51 @@ def create_app():
         return render_template("index.html", form = form, questions=listQuestions, answers=listAnswers)
     
     @app.route("/thankyou/<int:id>")
-    def thankyou(id):
-        data3 = {
-            "Tuyệt đẹp": 2,
-            "Đẹp": 3,
-            "Bình thường": 2,
-            "Xấu": 1,
-            "Xấu tệ": 2,
-        }
+    def thankyou(id):        
+        listQuestions = questions.query.all()
+        listAnswers = answers.query.all()        
+        listUserAnswers = userAnswers.query.all()    
+       
+        charts = []
+        for q in listQuestions:
+            fig, ((ax3)) = plt.subplots(1, 1, constrained_layout=False, figsize=(5, 5), dpi=100)
+            #data = get_answer_by_question(q.id)
+            answ = {}
+            for a in listAnswers:                
+                if a.questionId==q.id:
+                    answ[a.answer] = 0
+                    for ans in listUserAnswers:
+                        if ans.questionId == q.id and ans.answerId==a.id:
+                            answ[a.answer] = answ[a.answer] + 1
+            
+        #df = pd.DataFrame(result)
+        #plot = df.plot.pie(subplots=True, figsize=(11, 6))           
 
-        ax3.set_title("Bạn đánh giá thế nào về thiết kế của Galaxy S22?", fontsize=11)
+            ax3.set_title(q.question, fontsize=11)
 
-        #
-        labels = data3.keys()
-        values = data3.values()
-        explode = (0.01, 0.01, 0.01, 0.01, 0.01)
+            #
+            labels = answ.keys()
+            values = answ.values()
+            explode = []
+            for item in answ.keys():
+                explode.append(0.01)
 
-        ax3.pie(values, labels=labels, autopct="%.2f%%", explode=explode)
-        buf = BytesIO()
-        fig.savefig(buf, format="png")
-        data = base64.b64encode(buf.getbuffer()).decode("ascii")
-        return render_template("thankyou.html",id=id, chart="<img src='data:image/png;base64,"+data+"'/>")
+            ax3.pie(values, labels=labels, autopct="%.2f%%", explode=explode)
+            buf = BytesIO()
+            fig.savefig(buf, format="png")
+            data = base64.b64encode(buf.getbuffer()).decode("ascii")
+            charts.append(data)
+            print(answ)
+        return render_template("thankyou.html",id=id, charts=charts)
 
+    def get_answer_by_question(questionId):
+        query = db.session.query(
+            questions.question,
+            questions.id,            
+            answers.id,
+            answers.answer,
+            userAnswers.answerId
+        ).filter(questions.id==questionId)
+        return query.all()
+    
     return app

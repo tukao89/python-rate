@@ -1,6 +1,18 @@
 {% extends "layout.html" %}
 {% block title %}Thankyou{% endblock %}
 {% block main %}
-  {{id}}
-  {{chart| safe}}
+<h1>Cảm ơn bạn đã tham gia khảo sát!!!!</h1>
+  <div style="display:flex; flex-wrap:wrap">
+    {%for chart in charts%}
+    <div class="chart-item"><img src="data:image/png;base64,{{chart}}"/>  </div>
+  {%endfor%}
+  </div>
+  <style>    
+.chart-item{
+  width:33%;
+  border:solid 1px #ccc;padding:3px;
+  margin:5px
+}
+img{max-width:100%}
+  </style>
 {% endblock %}
