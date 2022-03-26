@@ -98,18 +98,18 @@ def create_app():
     mail = Mail(app)
 
     class RegistrationForm(Form):
-        name = StringField('Name', [validators.DataRequired(message="Name is required.")])
-        age = StringField('Age', [validators.DataRequired(message="Age is required.")])
-        jobTitle = StringField('Job Title', [validators.DataRequired(message="Job Title is required.")])
-        email = StringField("Email",  [validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
-        phone = StringField('Phone')
+        name = StringField(label='Name', validators=[validators.DataRequired(message="Name is required.")])
+        age = StringField(label='Age', validators=[validators.DataRequired(message="Age is required.")])
+        jobTitle = StringField(label='Job Title', validators=[validators.DataRequired(message="Job Title is required.")])
+        email = StringField(label="Email",  validators=[validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
+        phone = StringField(label='Phone',validators=[validators.DataRequired(message="Phone is required.")])
     
     @app.route("/", methods=["GET","POST"])
     def index():
         listQuestions = questions.query.all()
         listAnswers = answers.query.all()        
         form = RegistrationForm(request.form)
-        if(request.method=="POST") :
+        if(request.method=="POST") and form.validators():
             name = request.form.get("name")
             age = request.form.get("age")
             jobTitle = request.form.get("jobTitle")
