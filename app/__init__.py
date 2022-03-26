@@ -101,8 +101,10 @@ def create_app():
         name = StringField(label='Name', validators=[validators.DataRequired(message="Name is required.")])
         age = StringField(label='Age', validators=[validators.DataRequired(message="Age is required.")])
         jobTitle = StringField(label='Job Title', validators=[validators.DataRequired(message="Job Title is required.")])
-        email = StringField(label="Email",  validators=[validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
-        phone = StringField(label='Phone',validators=[validators.DataRequired(message="Phone is required.")])
+        # email = StringField(label="Email",  validators=[validators.DataRequired(message="Email is required."), validators.Email("This ~field requires a valid email address")])
+        # phone = StringField(label='Phone',validators=[validators.DataRequired(message="Phone is required.")])
+        email = StringField('Email', validators=[validators.DataRequired(), validators.Email(), validators.Length(min=6, max=40)])
+        phone = StringField('Phone', validators=[validators.DataRequired(), validators.Length(10)])
     
     @app.route("/", methods=["GET","POST"])
     def index():
